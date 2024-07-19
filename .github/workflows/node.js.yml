@@ -5,68 +5,32 @@ name: Node.js CI
 
 on:
   push:
-    branches: [main, feat, docs]
-  pull_request:
-    branches: [main, feat, docs]
-
+    branches: [npm]
+    
 jobs:
-  lint:
+  publish:
     environment: test
 
-    runs-on: macos-14
+    runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18, 20]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: npm
 
       - name: Install pnpm
         run: corepack enable
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
 
       - run: pnpm install
 
-      - name: Lint
-        run: pnpm run lint
+      - name: Configure npm for authentication
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
-  test:
-    environment: test
+      - name: Run release script
+        run: pnpm run build:package
 
-    runs-on: macos-14
-
-    strategy:
-      matrix:
-        node-version: [18, 20]
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install pnpm
-        run: corepack enable
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Setup timezone
-        uses: szenius/set-timezone@v2.0
-        with:
-          timezoneLinux: Asia/Shanghai
-          timezoneMacos: Asia/Shanghai
-          timezoneWindows: Asia/Shanghai
-
-      - run: pnpm install
-
-      - name: Test
-        run: pnpm run test:cov
-
-      - name: Code coverage
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Publish to npm
+        run: npm publish
