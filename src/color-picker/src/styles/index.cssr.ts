@@ -146,6 +146,9 @@ export default c([
   cB('color-picker-input', `
     display: flex;
     align-items: center;
+    & + & {
+      margin-top: 3px; /* 非第一个元素加上 margin-top */
+    }
   `, [
     cB('input', `
       flex-grow: 1;
