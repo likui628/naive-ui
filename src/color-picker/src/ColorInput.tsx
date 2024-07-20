@@ -30,10 +30,6 @@ export default defineComponent({
       type: String as PropType<ColorPickerMode>,
       required: true
     },
-    modes: {
-      type: Array as PropType<ColorPickerMode[]>,
-      required: true
-    },
     showAlpha: {
       type: Boolean,
       required: true
@@ -48,11 +44,9 @@ export default defineComponent({
       default: null
     },
     onUpdateValue: {
-      type: Function as PropType<(value: string) => void>,
-      required: true
-    },
-    onUpdateMode: {
-      type: Function as PropType<() => void>,
+      type: Function as PropType<
+        (value: string, mode: ColorPickerMode) => void
+      >,
       required: true
     }
   },
@@ -62,7 +56,8 @@ export default defineComponent({
         const { showAlpha } = props
         if (props.mode === 'hex') {
           props.onUpdateValue(
-            (showAlpha ? toHexaString : toHexString)(value as string)
+            (showAlpha ? toHexaString : toHexString)(value as string),
+            'hex'
           )
           return
         }
@@ -79,7 +74,8 @@ export default defineComponent({
             props.onUpdateValue(
               (showAlpha ? toHsvaString : toHsvString)(
                 nextValueArr as HSVA | HSV
-              )
+              ),
+              'hsv'
             )
             break
           case 'rgb':
@@ -87,7 +83,8 @@ export default defineComponent({
             props.onUpdateValue(
               (showAlpha ? toRgbaString : toRgbString)(
                 nextValueArr as RGBA | RGB
-              )
+              ),
+              'rgb'
             )
             break
           case 'hsl':
@@ -95,7 +92,8 @@ export default defineComponent({
             props.onUpdateValue(
               (showAlpha ? toHslaString : toHslString)(
                 nextValueArr as HSLA | HSL
-              )
+              ),
+              'hsl'
             )
             break
         }
@@ -103,16 +101,10 @@ export default defineComponent({
     }
   },
   render() {
-    const { clsPrefix, modes } = this
+    const { clsPrefix } = this
     return (
       <div class={`${clsPrefix}-color-picker-input`}>
-        <div
-          class={`${clsPrefix}-color-picker-input__mode`}
-          onClick={this.onUpdateMode}
-          style={{
-            cursor: modes.length === 1 ? '' : 'pointer'
-          }}
-        >
+        <div class={`${clsPrefix}-color-picker-input__mode`}>
           {this.mode.toUpperCase() + (this.showAlpha ? 'A' : '')}
         </div>
         <NInputGroup>

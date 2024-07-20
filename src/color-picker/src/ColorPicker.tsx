@@ -82,6 +82,10 @@ export const colorPickerProps = {
   },
   defaultShow: Boolean,
   defaultValue: String as PropType<string | null>,
+  mode: {
+    type: String as PropType<ColorPickerMode>,
+    default: 'rgb'
+  },
   modes: {
     type: Array as PropType<ColorPickerMode[]>,
     // no hsva by default since browser doesn't support it
@@ -182,23 +186,6 @@ export default defineComponent({
 
     const valueModeRef = computed(() => getModeFromValue(mergedValueRef.value))
 
-    const { modes } = props
-    const displayedModeRef = ref<ColorPickerMode>(
-      getModeFromValue(mergedValueRef.value) || modes[0] || 'rgb'
-    )
-
-    function handleUpdateDisplayedMode(): void {
-      const { modes } = props
-      const { value: displayedMode } = displayedModeRef
-      const currentModeIndex = modes.findIndex(mode => mode === displayedMode)
-      if (~currentModeIndex) {
-        displayedModeRef.value = modes[(currentModeIndex + 1) % modes.length]
-      }
-      else {
-        displayedModeRef.value = 'rgb'
-      }
-    }
-
     let _h: number, // avoid conflict with render function's h
       s: number,
       l: number,
@@ -259,8 +246,8 @@ export default defineComponent({
       }
     })
 
-    const mergedValueArrRef = computed(() => {
-      switch (displayedModeRef.value) {
+    const getMergedValueArr = (mode: ColorPickerMode) => {
+      switch (mode) {
         case 'rgb':
         case 'hex':
           return rgbaRef.value
@@ -269,7 +256,7 @@ export default defineComponent({
         case 'hsl':
           return hslaRef.value
       }
-    })
+    }
 
     const displayedHueRef = ref<number>(0)
     const displayedAlphaRef = ref<number>(1)
@@ -280,8 +267,8 @@ export default defineComponent({
       const hue = displayedHueRef.value
       const alpha = hsvaArr ? hsvaArr[3] : 1
       displayedSvRef.value = [s, v]
-      const { showAlpha } = props
-      switch (displayedModeRef.value) {
+      const { showAlpha, mode } = props
+      switch (mode) {
         case 'hsv':
           doUpdateValue(
             (showAlpha ? toHsvaString : toHsvString)([hue, s, v, alpha]),
@@ -325,8 +312,8 @@ export default defineComponent({
         return
       }
       const [, s, v, a] = hsvaArr
-      const { showAlpha } = props
-      switch (displayedModeRef.value) {
+      const { showAlpha, mode } = props
+      switch (mode) {
         case 'hsv':
           doUpdateValue(
             (showAlpha ? toHsvaString : toHsvString)([hue, s, v, a]),
@@ -364,7 +351,8 @@ export default defineComponent({
     }
 
     function handleUpdateAlpha(alpha: number): void {
-      switch (displayedModeRef.value) {
+      const { mode } = props
+      switch (mode) {
         case 'hsv':
           ;[_h, s, v] = hsvaRef.value!
           doUpdateValue(toHsvaString([_h, s, v, alpha]), 'cursor')
@@ -406,8 +394,109 @@ export default defineComponent({
       uncontrolledValueRef.value = value
     }
 
-    function handleInputUpdateValue(value: string): void {
-      doUpdateValue(value, 'input')
+    function handleInputUpdateValue(
+      value: string,
+      _mode: ColorPickerMode
+    ): void {
+      const { mode } = props
+      const _rgb2hsv = (value: string): HSVA => {
+        ;[r, g, b, a] = rgba(value)
+        return [...rgb2hsv(r, g, b), a]
+      }
+
+      const _hsl2hsv = (value: string): HSVA => {
+        ;[_h, s, l, a] = hsla(value)
+        return [...hsl2hsv(_h, s, l), a]
+      }
+
+      const _hex2rgb = (value: string): RGBA => {
+        ;[r, g, b, a] = rgba(value)
+        return [r, g, b, a]
+      }
+
+      const _hsl2rgb = (value: string): RGBA => {
+        ;[_h, s, l, a] = hsla(value)
+        return [...hsl2rgb(_h, s, l), a]
+      }
+
+      const _hsv2rgb = (value: string): RGBA => {
+        ;[_h, s, v, a] = hsva(value)
+        return [...hsv2rgb(_h, s, v), a]
+      }
+
+      const _rgb2hsl = (value: string): HSLA => {
+        ;[r, g, b, a] = rgba(value)
+        return [...rgb2hsl(r, g, b), a]
+      }
+
+      const _hsv2hsl = (value: string): HSLA => {
+        ;[_h, s, v, a] = hsva(value)
+        return [...hsv2hsl(_h, s, v), a]
+      }
+
+      switch (mode) {
+        case 'hsv': {
+          if (_mode === 'rgb') {
+            doUpdateValue(toHsvaString(_rgb2hsv(value)), 'input')
+          }
+          else if (_mode === 'hex') {
+            doUpdateValue(toHsvaString(_rgb2hsv(value)), 'input')
+          }
+          else if (_mode === 'hsl') {
+            doUpdateValue(toHsvaString(_hsl2hsv(value)), 'input')
+          }
+          else if (_mode === 'hsv') {
+            doUpdateValue(value, 'input')
+          }
+          break
+        }
+        case 'rgb': {
+          if (_mode === 'rgb') {
+            doUpdateValue(value, 'input')
+          }
+          else if (_mode === 'hex') {
+            doUpdateValue(toRgbaString(_hex2rgb(value)), 'input')
+          }
+          else if (_mode === 'hsl') {
+            doUpdateValue(toRgbaString(_hsl2rgb(value)), 'input')
+          }
+          else if (_mode === 'hsv') {
+            doUpdateValue(toRgbaString(_hsv2rgb(value)), 'input')
+          }
+          break
+        }
+        case 'hex': {
+          if (_mode === 'rgb') {
+            doUpdateValue(toHexaString(rgba(value)), 'input')
+          }
+          else if (_mode === 'hex') {
+            doUpdateValue(toHexaString(_hex2rgb(value)), 'input')
+          }
+          else if (_mode === 'hsl') {
+            doUpdateValue(toHexaString(_hsl2rgb(value)), 'input')
+          }
+          else if (_mode === 'hsv') {
+            doUpdateValue(toHexaString(_hsv2rgb(value)), 'input')
+          }
+          break
+        }
+        case 'hsl': {
+          if (_mode === 'rgb') {
+            doUpdateValue(toHslaString(_rgb2hsl(value)), 'input')
+          }
+          else if (_mode === 'hex') {
+            doUpdateValue(toHslaString(_rgb2hsl(value)), 'input')
+          }
+          else if (_mode === 'hsl') {
+            doUpdateValue(value, 'input')
+          }
+          else if (_mode === 'hsv') {
+            doUpdateValue(toHslaString(_hsv2hsl(value)), 'input')
+          }
+          break
+        }
+      }
+
       void nextTick(handleComplete)
     }
 
@@ -586,7 +675,7 @@ export default defineComponent({
               {props.showPreview ? (
                 <ColorPreview
                   clsPrefix={mergedClsPrefix}
-                  mode={displayedModeRef.value}
+                  mode={props.mode}
                   color={rgbaRef.value && toHexString(rgbaRef.value)}
                   onUpdateColor={(color) => {
                     doUpdateValue(color, 'input')
@@ -594,20 +683,20 @@ export default defineComponent({
                 />
               ) : null}
             </div>
-            <ColorInput
-              clsPrefix={mergedClsPrefix}
-              showAlpha={props.showAlpha}
-              mode={displayedModeRef.value}
-              modes={modes}
-              onUpdateMode={handleUpdateDisplayedMode}
-              value={mergedValueRef.value}
-              valueArr={mergedValueArrRef.value}
-              onUpdateValue={handleInputUpdateValue}
-            />
+            {modes.map(model => (
+              <ColorInput
+                clsPrefix={mergedClsPrefix}
+                showAlpha={props.showAlpha}
+                mode={model}
+                value={mergedValueRef.value}
+                valueArr={getMergedValueArr(model)}
+                onUpdateValue={handleInputUpdateValue}
+              />
+            ))}
             {props.swatches?.length && (
               <ColorPickerSwatches
                 clsPrefix={mergedClsPrefix}
-                mode={displayedModeRef.value}
+                mode={props.mode}
                 swatches={props.swatches}
                 onUpdateColor={(color) => {
                   doUpdateValue(color, 'input')
