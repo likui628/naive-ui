@@ -394,6 +394,11 @@ export default defineComponent({
       uncontrolledValueRef.value = value
     }
 
+    function handleSwatchUpdateValue(value: string) {
+      const { mode } = props
+      handleInputUpdateValue(value, mode)
+    }
+
     function handleInputUpdateValue(
       value: string,
       _mode: ColorPickerMode
@@ -698,9 +703,7 @@ export default defineComponent({
                 clsPrefix={mergedClsPrefix}
                 mode={props.mode}
                 swatches={props.swatches}
-                onUpdateColor={(color) => {
-                  doUpdateValue(color, 'input')
-                }}
+                onUpdateColor={handleSwatchUpdateValue}
               />
             )}
           </div>
