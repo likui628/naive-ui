@@ -100,6 +100,7 @@ export const colorPickerProps = {
     type: Boolean,
     default: true
   },
+  showEyedropper: Boolean,
   showPreview: Boolean,
   swatches: Array as PropType<string[]>,
   disabled: {
@@ -635,6 +636,7 @@ export default defineComponent({
       const { internalActions, modes, actions } = props
       const { value: mergedTheme } = themeRef
       const { value: mergedClsPrefix } = mergedClsPrefixRef
+
       return (
         <div
           class={[
@@ -677,6 +679,11 @@ export default defineComponent({
                   />
                 ) : null}
               </div>
+              {slots.eyedropper ? (
+                <div class={`${mergedClsPrefix}-color-picker-eyedropper`}>
+                  {slots.eyedropper()}
+                </div>
+              ) : null}
               {props.showPreview ? (
                 <ColorPreview
                   clsPrefix={mergedClsPrefix}

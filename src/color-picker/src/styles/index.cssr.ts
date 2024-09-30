@@ -143,6 +143,9 @@ export default c([
       z-index: 1;
     `)
   ]),
+  cB('color-picker-eyedropper', `
+    display: flex;
+  `),
   cB('color-picker-input', `
     display: flex;
     align-items: center;

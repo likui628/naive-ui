@@ -29,7 +29,11 @@ export default defineComponent({
 <template>
   <n-form :model="model">
     <n-form-item label="Color(#18A058)" path="color" :rule="colorRule">
-      <n-color-picker v-model:value="model.color" :show-alpha="false" />
+      <n-color-picker
+        :default-value="model.color"
+        :show-alpha="false"
+        @complete="(val) => (model.color = val)"
+      />
     </n-form-item>
   </n-form>
 </template>
