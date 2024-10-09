@@ -662,6 +662,11 @@ export default defineComponent({
               onComplete={handleComplete}
             />
             <div class={`${mergedClsPrefix}-color-picker-preview`}>
+              {slots.eyedropper ? (
+                <div class={`${mergedClsPrefix}-color-picker-eyedropper`}>
+                  {slots.eyedropper()}
+                </div>
+              ) : null}
               <div class={`${mergedClsPrefix}-color-picker-preview__sliders`}>
                 <HueSlider
                   clsPrefix={mergedClsPrefix}
@@ -679,11 +684,6 @@ export default defineComponent({
                   />
                 ) : null}
               </div>
-              {slots.eyedropper ? (
-                <div class={`${mergedClsPrefix}-color-picker-eyedropper`}>
-                  {slots.eyedropper()}
-                </div>
-              ) : null}
               {props.showPreview ? (
                 <ColorPreview
                   clsPrefix={mergedClsPrefix}

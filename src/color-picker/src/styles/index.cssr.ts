@@ -115,6 +115,7 @@ export default c([
   ]),
   cB('color-picker-preview', `
     display: flex;
+    align-items: center;
   `, [
     cE('sliders', `
       flex: 1 0 auto;
